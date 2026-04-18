@@ -90,6 +90,39 @@ git push -u origin main
 
 Le `.gitignore` du projet ignore déjà `node_modules`, `dist`, etc. — ne les commit pas.
 
+## GitHub Pages (site public)
+
+URL attendue pour ce dépôt : **`https://chabraka.github.io/Pokemon/`** (forme `https://<user>.github.io/<repo>/`).
+
+### Ce que le projet contient déjà
+
+- **`vite.config.js`** : en production (`npm run build`), `base` est **`/Pokemon/`** pour que les assets se chargent sous le sous-chemin GitHub Pages. En dev (`npm run dev`), `base` reste **`/`**.
+- **`public/.nojekyll`** : évite que GitHub Pages (Jekyll) ignore certains fichiers.
+- **`.github/workflows/deploy-pages.yml`** : à chaque push sur **`main`**, build Vite puis déploie le dossier **`dist`** sur GitHub Pages.
+
+### À activer une fois sur GitHub
+
+1. Repo **Pokemon** → **Settings** → **Pages**
+2. **Build and deployment** → **Source** : **GitHub Actions** (pas “Deploy from a branch”).
+
+### Déclencher / vérifier le déploiement
+
+- Push sur **`main`** (le workflow se lance tout seul), ou onglet **Actions** → workflow **Deploy to GitHub Pages** → **Run workflow**.
+- Quand c’est vert, ouvre **`https://chabraka.github.io/Pokemon/`** (le premier déploiement peut prendre 1–2 minutes).
+
+### Si tu renommes le dépôt GitHub
+
+Adapte **`repoBase`** dans `vite.config.js` pour qu’il corresponde exactement à `/<nom-du-repo>/`.
+
+### Tester le build “comme en prod” en local
+
+```bash
+npm run build
+npm run preview:pages
+```
+
+Puis ouvre l’URL affichée (souvent `http://localhost:4173/Pokemon/`).
+
 ## Modifier l'app
 
 - Pour changer le nombre de générations : `GENERATION_COUNT` dans `pokemonAPI.js`.
