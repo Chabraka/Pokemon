@@ -1,0 +1,447 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #f5f5f5;
+  background-color: #1a1a1a;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.app-shell {
+  position: relative;
+}
+
+.app-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: -0.25rem 0 0.75rem;
+}
+
+.app-main {
+  min-width: 0;
+}
+
+.lang-switch {
+  display: inline-flex;
+  border-radius: 10px;
+  border: 1px solid #555;
+  overflow: hidden;
+  background: #2a2a2a;
+}
+
+.lang-switch__btn {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.lang-switch__btn:hover {
+  background: #383838;
+  color: #fff;
+}
+
+.lang-switch__btn--active {
+  background: #3a3028;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(232, 136, 85, 0.4);
+}
+
+.lang-switch__btn:focus-visible {
+  outline: 2px solid #8ab4ff;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-top: 0;
+}
+
+h2,
+h3 {
+  margin-top: 0;
+}
+
+a {
+  color: #8ab4ff;
+}
+
+.muted {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.hint {
+  color: #ccc;
+  margin-bottom: 1.25rem;
+}
+
+.gen-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.gen-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.gen-tab {
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: #2a2a2a;
+  color: #eee;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gen-tab:hover {
+  background: #333;
+  border-color: #777;
+}
+
+.gen-tab--active {
+  border-color: #e85;
+  background: #3a3028;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(232, 136, 85, 0.35);
+}
+
+.gen-tab:focus-visible {
+  outline: 2px solid #e85;
+  outline-offset: 2px;
+}
+
+.print-icon-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid #666;
+  background: #333;
+  color: #e8e8e8;
+  cursor: pointer;
+}
+
+.print-icon-btn:hover:not(:disabled) {
+  background: #404040;
+  border-color: #888;
+  color: #fff;
+}
+
+.print-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.print-icon-btn:focus-visible {
+  outline: 2px solid #8ab4ff;
+  outline-offset: 2px;
+}
+
+.print-icon-btn__svg {
+  display: block;
+}
+
+.gen-status {
+  color: #ccc;
+}
+
+.gen-count {
+  margin: 0 0 1rem;
+}
+
+.pokedex-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.pokemon-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+
+.pokemon-tile img {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.detail-panel {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: #222;
+  border: 1px solid #444;
+}
+
+.detail-panel__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail-panel__close {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #666;
+  background: #333;
+  color: #f5f5f5;
+  font: inherit;
+  cursor: pointer;
+}
+
+.detail-panel__close:hover {
+  background: #3d3d3d;
+}
+
+.detail-panel__status {
+  color: #ccc;
+}
+
+.detail-panel__error {
+  color: #f88;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #383838;
+}
+
+.detail-section:last-of-type {
+  border-bottom: none;
+}
+
+.detail-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.detail-hero__art {
+  width: auto;
+  max-width: 220px;
+  height: auto;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+
+.stats-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 360px;
+}
+
+.stats-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #383838;
+}
+
+.stats-table td:first-child {
+  text-transform: capitalize;
+  color: #ccc;
+}
+
+.moves-list {
+  columns: 2;
+  column-gap: 1.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .moves-list {
+    columns: 1;
+  }
+}
+
+.flavor {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #e85;
+  background: #2a2a2a;
+  font-style: italic;
+  color: #ddd;
+}
+
+.tcg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.tcg-card {
+  margin: 0;
+  padding: 0.5rem;
+  background: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #444;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.tcg-card img {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  border-radius: 6px;
+}
+
+.json-block {
+  max-height: 420px;
+  overflow: auto;
+  padding: 0.75rem;
+  background: #151515;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+details {
+  margin-bottom: 0.75rem;
+}
+
+summary {
+  cursor: pointer;
+  color: #8ab4ff;
+}
+
+/* ——— Impression A4 : 7 × 96 px (comme avant), sprites seuls ——— */
+@media screen {
+  .print-sheet {
+    position: absolute;
+    left: -200vw;
+    top: 0;
+    width: 210mm;
+    box-sizing: border-box;
+    padding: 8mm;
+    background: #fff;
+    pointer-events: none;
+  }
+}
+
+.print-sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 96px);
+  gap: 2.5mm 2mm;
+  justify-content: start;
+  align-content: start;
+}
+
+.print-sheet__cell {
+  width: 96px;
+  height: 96px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.print-sheet__img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /*
+   * Ne pas utiliser visibility:hidden sur tout le body : les blocs invisibles
+   * gardent leur hauteur → le navigateur crée des pages vides après la grille.
+   * On retire du flux tout sauf la feuille d’impression (portail sur body).
+   */
+  body > *:not(.print-sheet) {
+    display: none !important;
+  }
+
+  .print-sheet {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100%;
+    max-width: 190mm;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    pointer-events: auto;
+  }
+
+  .print-sheet__grid {
+    grid-template-columns: repeat(7, 96px);
+    gap: 2mm;
+  }
+
+  .print-sheet__cell {
+    width: 96px;
+    height: 96px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-sheet__img {
+    width: 96px;
+    height: 96px;
+  }
+}
