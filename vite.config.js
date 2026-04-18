@@ -6,7 +6,9 @@ import react from '@vitejs/plugin-react'
 // Si tu renommes le dépôt GitHub, adapte ce chemin (doit finir par /).
 const repoBase = '/Pokemon/'
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: command === 'build' ? repoBase : '/',
+  // `mode === 'production'` : build GitHub + `vite preview` (test du dist).
+  // En dev (`npm run dev`), mode est `development` → base `/`.
+  base: mode === 'production' ? repoBase : '/',
 }))

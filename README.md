@@ -96,19 +96,20 @@ URL attendue pour ce dépôt : **`https://chabraka.github.io/Pokemon/`** (forme 
 
 ### Ce que le projet contient déjà
 
-- **`vite.config.js`** : en production (`npm run build`), `base` est **`/Pokemon/`** pour que les assets se chargent sous le sous-chemin GitHub Pages. En dev (`npm run dev`), `base` reste **`/`**.
+- **`vite.config.js`** : en **`mode` production** (`npm run build` ou `vite preview --mode production`), `base` est **`/Pokemon/`** pour que les assets se chargent sous le sous-chemin GitHub Pages. En dev (`npm run dev`), `base` reste **`/`**.
 - **`public/.nojekyll`** : évite que GitHub Pages (Jekyll) ignore certains fichiers.
-- **`.github/workflows/deploy-pages.yml`** : à chaque push sur **`main`**, build Vite puis déploie le dossier **`dist`** sur GitHub Pages.
+- **`.github/workflows/deploy-pages.yml`** : à chaque push sur **`main`**, build Vite puis met à jour la branche **`gh-pages`** avec le contenu de **`dist`** (action `peaceiris/actions-gh-pages`).
+- **`npm run deploy`** : même chose **depuis ton PC** (build + push sur **`gh-pages`** avec le paquet `gh-pages`) si tu ne veux pas attendre le workflow.
 
-### À activer une fois sur GitHub
+### Réglages GitHub (obligatoire — sinon page blanche)
 
-1. Repo **Pokemon** → **Settings** → **Pages**
-2. **Build and deployment** → **Source** : **GitHub Actions** (pas “Deploy from a branch”).
+1. **Settings** → **Actions** → **General** → **Workflow permissions** : coche **Read and write permissions** (sinon le workflow ne peut pas pousser sur `gh-pages`).
+2. **Settings** → **Pages** → **Build and deployment** → **Source** : **Deploy from a branch** → branche **`gh-pages`**, dossier **`/ (root)`** — **pas** la branche **`main`** (la racine de `main` contient l’`index.html` de **développement** Vite avec `/src/main.jsx`, ce qui ne fonctionne pas sur Pages).
 
-### Déclencher / vérifier le déploiement
+### Déclencher le site
 
-- Push sur **`main`** (le workflow se lance tout seul), ou onglet **Actions** → workflow **Deploy to GitHub Pages** → **Run workflow**.
-- Quand c’est vert, ouvre **`https://chabraka.github.io/Pokemon/`** (le premier déploiement peut prendre 1–2 minutes).
+- Pousse ce dépôt sur **`main`** : le workflow **Deploy to GitHub Pages** crée ou met à jour **`gh-pages`**. Attends le job vert, puis ouvre **`https://chabraka.github.io/Pokemon/`** (parfois 1–2 minutes de retard).
+- Ou en local : **`npm run deploy`** (Git + remote `origin` configurés), avec la même source Pages **`gh-pages`** / root.
 
 ### Si tu renommes le dépôt GitHub
 
@@ -118,10 +119,26 @@ Adapte **`repoBase`** dans `vite.config.js` pour qu’il corresponde exactement 
 
 ```bash
 npm run build
-npm run preview:pages
+npm run preview
 ```
 
-Puis ouvre l’URL affichée (souvent `http://localhost:4173/Pokemon/`).
+Ouvre **`http://localhost:4173/Pokemon/`** (avec le segment **`/Pokemon/`**), pas seulement la racine du port, sinon les JS/CSS ne se chargent pas.
+
+### Page blanche alors que le titre « Pokédex » apparaît
+
+Ouvre le **code source** de la page (clic droit → *Afficher le code source de la page*). Si tu vois :
+
+`<script type="module" src="/src/main.jsx"></script>`
+
+alors **GitHub Pages sert l’`index.html` à la racine du dépôt** (fichier Vite de dev), **pas** le dossier **`dist`** construit par le workflow. Dans ce cas l’app ne peut pas démarrer en production.
+
+**Correction** : *Settings* → *Pages* → **Deploy from a branch** → **`gh-pages`** / **(root)**. Vérifie aussi *Settings* → *Actions* → *General* → permissions workflow en **lecture/écriture**. Le code source de la page doit montrer `<script … src="/Pokemon/assets/…">`, pas `/src/main.jsx`.
+
+### Si le site GitHub reste vide ou 404
+
+- **Source Pages** : **branche `gh-pages`**, jamais **`/ (root)` sur `main`**.
+- **URL** : **`https://chabraka.github.io/Pokemon/`** (casse du nom de repo dans l’URL).
+- **Workflow en échec** : *Actions* → *Deploy to GitHub Pages* → logs (souvent `npm ci` si **`package-lock.json`** n’est pas sur le dépôt, ou refus d’écriture si les permissions workflow sont en lecture seule).
 
 ## Modifier l'app
 

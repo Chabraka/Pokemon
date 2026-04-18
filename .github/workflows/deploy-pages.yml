@@ -1,21 +1,22 @@
 name: Deploy to GitHub Pages
 
+# Met à jour la branche `gh-pages` avec le contenu de `dist` (build Vite).
+# Sur GitHub : Settings → Pages → Source = **Deploy from a branch** → **gh-pages** / **/(root)**.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: gh-pages-deploy
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,7 +25,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
       - name: Install
@@ -33,18 +34,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
+      - name: Verify production output
+        run: |
+          test -f dist/index.html
+          if grep -q 'src/main.jsx' dist/index.html; then
+            echo 'ERREUR: dist/index.html ressemble au mode dev.'
+            exit 1
+          fi
+          if ! grep -q '/Pokemon/assets/' dist/index.html; then
+            echo 'ERREUR: bundle /Pokemon/assets/ introuvable (base Vite).'
+            exit 1
+          fi
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Push dist to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
