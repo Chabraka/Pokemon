@@ -1,5 +1,8 @@
 const POKEAPI = 'https://pokeapi.co/api/v2'
 const SPECIES_BATCH = 10
+const TYPE_BATCH = 12
+const pokemonTypeCache = new Map()
+const frenchNameCache = new Map()
 
 /** Extrait l’ID numérique depuis une URL PokéAPI (…/pokemon-species/12/) */
 function idFromSpeciesUrl(url) {
@@ -18,10 +21,18 @@ export function prettifySpeciesName(slug) {
 }
 
 async function fetchFrenchNameForSpeciesId(speciesId) {
+  if (frenchNameCache.has(speciesId)) {
+    return frenchNameCache.get(speciesId)
+  }
   const res = await fetch(`${POKEAPI}/pokemon-species/${speciesId}`)
-  if (!res.ok) return null
+  if (!res.ok) {
+    frenchNameCache.set(speciesId, null)
+    return null
+  }
   const data = await res.json()
-  return data.names?.find((n) => n.language?.name === 'fr')?.name ?? null
+  const frName = data.names?.find((n) => n.language?.name === 'fr')?.name ?? null
+  frenchNameCache.set(speciesId, frName)
+  return frName
 }
 
 /**
@@ -30,22 +41,54 @@ async function fetchFrenchNameForSpeciesId(speciesId) {
  */
 export async function attachDisplayNames(list, locale) {
   if (!list.length) return list
-  if (locale !== 'fr') {
-    return list.map((p) => ({
-      ...p,
-      displayName: prettifySpeciesName(p.name),
-    }))
-  }
-
   const out = []
   for (let i = 0; i < list.length; i += SPECIES_BATCH) {
     const chunk = list.slice(i, i + SPECIES_BATCH)
     const resolved = await Promise.all(
       chunk.map(async (p) => {
         const fr = await fetchFrenchNameForSpeciesId(p.id)
+        const englishName = prettifySpeciesName(p.name)
         return {
           ...p,
-          displayName: fr ?? prettifySpeciesName(p.name),
+          frenchName: fr ?? englishName,
+          englishName,
+          displayName: locale === 'fr' ? (fr ?? englishName) : englishName,
+        }
+      })
+    )
+    out.push(...resolved)
+  }
+  return out
+}
+
+async function fetchPokemonTypesById(pokemonId) {
+  if (pokemonTypeCache.has(pokemonId)) {
+    return pokemonTypeCache.get(pokemonId)
+  }
+  const res = await fetch(`${POKEAPI}/pokemon/${pokemonId}`)
+  if (!res.ok) throw new Error(`Pokemon ${pokemonId} introuvable`)
+  const data = await res.json()
+  const types = (data.types ?? [])
+    .sort((a, b) => a.slot - b.slot)
+    .map((entry) => entry.type?.name)
+    .filter(Boolean)
+  pokemonTypeCache.set(pokemonId, types)
+  return types
+}
+
+export async function attachPokemonTypes(list) {
+  if (!list.length) return list
+  const out = []
+  for (let i = 0; i < list.length; i += TYPE_BATCH) {
+    const chunk = list.slice(i, i + TYPE_BATCH)
+    const resolved = await Promise.all(
+      chunk.map(async (p) => {
+        try {
+          const types = await fetchPokemonTypesById(p.id)
+          return { ...p, types }
+        } catch (err) {
+          console.error('attachPokemonTypes:', err)
+          return { ...p, types: [] }
         }
       })
     )
@@ -79,6 +122,36 @@ export async function fetchPokemonByGeneration(generation) {
     return list
   } catch (err) {
     console.error('fetchPokemonByGeneration:', err)
+    return []
+  }
+}
+
+/**
+ * Tous les Pokémon disponibles (toutes générations), triés par ID national.
+ */
+export async function fetchAllPokemon() {
+  try {
+    const response = await fetch(`${POKEAPI}/pokemon-species?limit=2000`)
+    if (!response.ok) throw new Error('Liste globale des Pokemon introuvable')
+    const data = await response.json()
+    const species = data.results
+    if (!Array.isArray(species)) return []
+
+    const list = species
+      .map((s) => {
+        const id = idFromSpeciesUrl(s.url)
+        return {
+          name: s.name,
+          id,
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+        }
+      })
+      .filter((p) => p.id > 0)
+
+    list.sort((a, b) => a.id - b.id)
+    return list
+  } catch (err) {
+    console.error('fetchAllPokemon:', err)
     return []
   }
 }

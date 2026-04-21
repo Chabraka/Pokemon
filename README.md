@@ -143,3 +143,52 @@ alors **GitHub Pages sert l’`index.html` à la racine du dépôt** (fichier Vi
 ## Modifier l'app
 
 - Pour changer le nombre de générations : `GENERATION_COUNT` dans `pokemonAPI.js`.
+- Thème visuel :
+  - l’interface reprend une esthétique **Pokédex console** : coque rouge marquée, panneau central clair, blocs rétro.
+  - le titre **POKÉDEX** est positionné au-dessus de l’interface, en rouge avec contour blanc (style logo).
+  - la colonne de droite reprend un style “console dex” avec un bloc de statut en haut.
+  - la recherche garde la palette rouge/vert et une police pixelisée type jeu vidéo/DS.
+  - les cartes Pokémon affichent le numéro en haut à gauche avec une pastille liée à la couleur du type principal.
+  - un bouton Pokéball (contour / rempli) permet de sélectionner puis désélectionner chaque Pokémon.
+  - les types sont affichés en badges et localisés selon la langue active (FR/EN).
+  - les filtres par type sont multi-sélectionnables (combinaison de plusieurs types).
+  - le bloc de statut est renommé **POKEDEX**, affiche le total de la génération et le nombre attrapé (sélectionné).
+  - la barre de recherche est plus large, sans texte par défaut, avec un aperçu sprite plus visible.
+  - les couleurs de types sont accentuées pour les cartes et les badges de type.
+  - le texte des types est centré (badges de cartes et filtres de type).
+  - l’alignement vertical des badges de type est ajusté pour garder le texte parfaitement centré.
+  - chaque carte Pokémon utilise une couleur de fond selon le **type principal** (`data-type` dans `src/components/Pokedex.jsx`).
+  - les cartes Pokémon ont une taille uniforme pour une grille plus régulière.
+  - les types ne sont pas affichés dans la grille (la couleur de fond reste basée sur le type principal).
+  - le texte d’aide en haut de la zone principale et la ligne de compteur au-dessus de la grille sont masqués pour une interface plus épurée.
+- Recherche :
+  - un champ de recherche (avec icône loupe) est placé dans le panneau de droite et filtre les Pokémon par nom FR ou EN.
+  - l’exemple du placeholder de recherche a été remplacé par **Bulbizarre / Bulbasaur**.
+  - la recherche est tolérante : accents ignorés (ex. `salamèche`/`salameche`) et petites fautes (`distance de Levenshtein`).
+  - la recherche est **globale** : quand un texte est saisi, elle ignore les filtres de génération et de type pour retrouver un Pokémon sur l’ensemble du Pokédex.
+  - la barre de recherche a été compactée (moins de padding/hauteur) pour éviter un bloc sombre trop grand autour du champ.
+  - l’aperçu sprite du Pokémon dans la barre de recherche a été agrandi.
+  - l’aperçu sprite est positionné en absolu pour pouvoir grandir sans augmenter la hauteur de la barre de recherche.
+  - la barre de recherche a été légèrement ré-agrandie (padding + texte) pour un meilleur confort de lecture.
+  - la barre de recherche est visuellement élargie dans la sidebar, et le sprite d’aperçu est aligné au maximum vers la droite.
+- Filtres par type :
+  - les filtres génération/type utilisent des listes déroulantes compactes (style sélecteur) pour alléger la longueur de la sidebar.
+  - le filtre de type est **multi-sélection** (combinaison de plusieurs types, logique ET).
+  - le sélecteur de type affiche des pastilles colorées (même palette que les badges des cartes) pour mieux se repérer.
+  - la zone de sélection des types a été agrandie (pastilles plus grosses + contraste renforcé) pour une meilleure lisibilité.
+  - le texte des types a été augmenté (taille + graisse) pour une lecture immédiate.
+  - les pastilles de type du filtre ont une taille augmentée (espacement, hauteur et padding) pour améliorer la lecture sur toute la grille.
+  - les pastilles ont aussi une largeur minimale plus grande pour rester lisibles et uniformes visuellement.
+  - la taille du texte des pastilles de filtre a encore été augmentée pour correspondre visuellement aux badges de type sous les cartes Pokémon.
+  - le texte des pastilles du filtre est maintenant fortement agrandi (priorité lisibilité), tout en conservant des largeurs de pastilles naturelles selon le contenu.
+  - correction CSS appliquée : la règle de taille des pastilles de filtre est prioritaire sur le style générique des badges pour garantir l’agrandissement visible.
+  - ajustement fin appliqué ensuite : taille des pastilles de filtre légèrement réduite pour un meilleur équilibre visuel.
+  - ajustement supplémentaire : pastilles de filtre réduites à nouveau pour un rendu plus compact.
+- Filtres génération :
+  - un mode **Toutes les générations** est disponible.
+  - la liste est paginée en tranches de **50 Pokémon par page** avec pagination en bas de la grille (numéros + ellipses).
+- Recherche :
+  - l’aperçu sprite dans la barre de recherche est plus grand pour une identification visuelle plus rapide.
+- Chargement :
+  - pendant le fetch, une Pokéball animée s’affiche (rotation).
+  - à la fin du chargement d’une génération, la grille apparaît avec un effet de zoom léger.
