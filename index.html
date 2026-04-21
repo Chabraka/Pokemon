@@ -5,10 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/Pokemon/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pokédex</title>
-    <script type="module" crossorigin src="/Pokemon/assets/index-DPuS2-rI.js"></script>
-    <link rel="stylesheet" crossorigin href="/Pokemon/assets/index-B4J17CAi.css">
+    <script type="module" crossorigin src="/Pokemon/assets/index-BE4pAt37.js"></script>
+    <link rel="stylesheet" crossorigin href="/Pokemon/assets/index-BiY8YZXN.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      ;(function () {
+        if (!/\.github\.io$/i.test(location.hostname)) return
+        var bad = document.querySelector('script[type="module"][src*="main.jsx"]')
+        if (!bad) return
+        var el = document.getElementById('root')
+        if (!el) return
+        el.innerHTML =
+          '<div style="font-family:system-ui,sans-serif;max-width:36rem;margin:2rem auto;padding:1.25rem 1.5rem;background:#1e1e1e;color:#eee;border-radius:12px;line-height:1.5">' +
+          '<h1 style="margin:0 0 0.75rem;font-size:1.25rem">Mauvaise source GitHub Pages</h1>' +
+          '<p style="margin:0 0 1rem">Le site est encore servi depuis la branche <strong>main</strong> (fichiers Vite de dev). Le navigateur ne trouve pas <code>main.jsx</code> sur le serveur → page blanche.</p>' +
+          '<p style="margin:0 0 0.75rem"><strong>À faire :</strong></p>' +
+          '<ol style="margin:0;padding-left:1.25rem">' +
+          '<li style="margin:0.35rem 0">Repo → <strong>Settings</strong> → <strong>Pages</strong> → Source : <strong>Deploy from a branch</strong> → branche <strong>gh-pages</strong>, dossier <strong>/ (root)</strong> (pas <code>main</code>).</li>' +
+          '<li style="margin:0.35rem 0"><strong>Settings</strong> → <strong>Actions</strong> → <strong>General</strong> → Workflow permissions : <strong>Read and write</strong>.</li>' +
+          '<li style="margin:0.35rem 0">Pousser sur <code>main</code> (workflow) ou lancer <code>npm run deploy</code> en local, attendre le déploiement, puis rafraîchir.</li>' +
+          '</ol>' +
+          '<p style="margin:1rem 0 0;font-size:0.9rem;color:#aaa">Le build de prod charge des fichiers <code>/Pokemon/assets/…</code> ; voir le README du dépôt.</p>' +
+          '</div>'
+      })()
+    </script>
   </body>
 </html>
