@@ -6,20 +6,40 @@ import {
   fetchPokemonByGeneration,
   fetchAllPokemon,
   GENERATION_COUNT,
+  prettifySpeciesName,
 } from '../services/pokemonAPI.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 
 const ALL_GENERATIONS_VALUE = 'all'
 const PAGE_SIZE = 50
+const CAUGHT_STORAGE_KEY = 'pokemon-caught-ids-v1'
+const OWNED_CARD_COUNTS_STORAGE_KEY = 'pokemon-owned-card-counts-v1'
 
-export default function Pokedex() {
+export default function Pokedex({ onOpenPokemonDetails, onOpenPokemonCards }) {
   const { locale, t } = useLanguage()
-  const [generation, setGeneration] = useState(1)
+  const [generation, setGeneration] = useState(ALL_GENERATIONS_VALUE)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTypes, setSelectedTypes] = useState(() => new Set())
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false)
-  const [selectedPokemonIds, setSelectedPokemonIds] = useState(() => new Set())
+  const [selectedPokemonIds, setSelectedPokemonIds] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(CAUGHT_STORAGE_KEY)
+      const ids = JSON.parse(raw ?? '[]')
+      return new Set(Array.isArray(ids) ? ids.filter((x) => Number.isFinite(x)) : [])
+    } catch {
+      return new Set()
+    }
+  })
   const [pokemon, setPokemon] = useState([])
+  const [ownedCardCountsByPokemon, setOwnedCardCountsByPokemon] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(OWNED_CARD_COUNTS_STORAGE_KEY)
+      const parsed = JSON.parse(raw ?? '{}')
+      return parsed && typeof parsed === 'object' ? parsed : {}
+    } catch {
+      return {}
+    }
+  })
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -50,6 +70,32 @@ export default function Pokedex() {
     }
     window.addEventListener('afterprint', onAfterPrint)
     return () => window.removeEventListener('afterprint', onAfterPrint)
+  }, [])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CAUGHT_STORAGE_KEY, JSON.stringify(Array.from(selectedPokemonIds)))
+    } catch {
+      // Ignore storage write issues silently.
+    }
+  }, [selectedPokemonIds])
+
+  useEffect(() => {
+    const onFocus = () => {
+      try {
+        const raw = window.localStorage.getItem(OWNED_CARD_COUNTS_STORAGE_KEY)
+        const parsed = JSON.parse(raw ?? '{}')
+        if (parsed && typeof parsed === 'object') setOwnedCardCountsByPokemon(parsed)
+      } catch {
+        // Ignore storage read issues silently.
+      }
+    }
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('hashchange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('hashchange', onFocus)
+    }
   }, [])
 
   function handlePrintCurrentGeneration() {
@@ -140,6 +186,12 @@ export default function Pokedex() {
     return prev[b.length]
   }
 
+  function getSearchTyposTolerance(queryLength) {
+    if (queryLength < 6) return 0
+    if (queryLength < 10) return 1
+    return 2
+  }
+
   const normalizedQuery = normalizeSearch(searchQuery)
   const isSearchMode = normalizedQuery.length > 0
   const sourceKey = isSearchMode ? ALL_GENERATIONS_VALUE : generation
@@ -174,6 +226,25 @@ export default function Pokedex() {
         setLoading(false)
         return
       }
+
+      if (sourceKey === ALL_GENERATIONS_VALUE) {
+        // Fast first paint for all generations; enrich only visible page afterwards.
+        const baseList = data.map((p) => {
+          const englishName = prettifySpeciesName(p.name)
+          return {
+            ...p,
+            types: p.types ?? [],
+            englishName,
+            frenchName: englishName,
+            displayName: locale === 'fr' ? englishName : englishName,
+            _frResolved: locale !== 'fr',
+          }
+        })
+        setPokemon(baseList)
+        setLoading(false)
+        return
+      }
+
       const withTypes = await attachPokemonTypes(data)
       const withNames = await attachDisplayNames(withTypes, locale)
       if (cancelled) return
@@ -205,9 +276,11 @@ export default function Pokedex() {
             normalizeSearch(p.name),
           ].filter(Boolean)
           return candidates.some((candidate) => {
-            if (candidate.includes(normalizedQuery)) return true
-            if (normalizedQuery.length < 4 || candidate.length < 4) return false
-            return levenshteinDistance(normalizedQuery, candidate) <= 2
+            if (candidate.startsWith(normalizedQuery)) return true
+            if (normalizedQuery.length < 6 || candidate.length < 6) return false
+            if (Math.abs(candidate.length - normalizedQuery.length) > 2) return false
+            const tolerance = getSearchTyposTolerance(normalizedQuery.length)
+            return levenshteinDistance(normalizedQuery, candidate) <= tolerance
           })
         })
   const totalPages = Math.max(1, Math.ceil(filteredPokemon.length / PAGE_SIZE))
@@ -215,6 +288,47 @@ export default function Pokedex() {
   const pageStart = (safeCurrentPage - 1) * PAGE_SIZE
   const pagePokemon = filteredPokemon.slice(pageStart, pageStart + PAGE_SIZE)
   const paginationItems = buildPaginationItems(safeCurrentPage, totalPages)
+
+  useEffect(() => {
+    if (sourceKey !== ALL_GENERATIONS_VALUE || loading || !pagePokemon.length) return
+    let cancelled = false
+
+    const needsEnrichment = pagePokemon.filter((p) => !p.types?.length || (locale === 'fr' && !p._frResolved))
+    if (!needsEnrichment.length) return
+
+    const enrichVisiblePage = async () => {
+      const withTypes = await attachPokemonTypes(needsEnrichment)
+      const withNames = locale === 'fr' ? await attachDisplayNames(withTypes, locale) : withTypes
+      if (cancelled) return
+      const byId = new Map(
+        withNames.map((p) => [
+          p.id,
+          {
+            types: p.types ?? [],
+            englishName: p.englishName ?? prettifySpeciesName(p.name),
+            frenchName: p.frenchName ?? prettifySpeciesName(p.name),
+            displayName:
+              locale === 'fr'
+                ? (p.frenchName ?? p.displayName ?? prettifySpeciesName(p.name))
+                : (p.englishName ?? p.displayName ?? prettifySpeciesName(p.name)),
+            _frResolved: locale !== 'fr' || Boolean(p.frenchName),
+          },
+        ])
+      )
+
+      setPokemon((prev) =>
+        prev.map((p) => {
+          const next = byId.get(p.id)
+          return next ? { ...p, ...next } : p
+        })
+      )
+    }
+
+    enrichVisiblePage()
+    return () => {
+      cancelled = true
+    }
+  }, [sourceKey, loading, pagePokemon, locale])
 
   const availableTypes = Array.from(
     new Set(pokemon.flatMap((p) => p.types ?? []).filter(Boolean))
@@ -281,39 +395,78 @@ export default function Pokedex() {
       ) : (
         <div key={`gen-${generation}`} className="pokedex-content pokedex-content--ready">
           <div className="pokedex-grid">
-            {pagePokemon.map((p) => (
-              <div
-                key={`${p.name}-${p.id}`}
-                className="pokemon-tile"
-                data-type={p.types?.[0] ?? 'normal'}
-              >
-                <div className="pokemon-tile__top">
-                  <span className="pokemon-id-badge">#{String(p.id).padStart(4, '0')}</span>
-                  <button
-                    type="button"
-                    className={`pokemon-ball-btn${selectedPokemonIds.has(p.id) ? ' pokemon-ball-btn--active' : ''}`}
-                    onClick={() => toggleSelectedPokemon(p.id)}
-                    aria-label={`${selectedPokemonIds.has(p.id) ? 'Deselect' : 'Select'} ${p.displayName ?? p.name}`}
-                    title={selectedPokemonIds.has(p.id) ? 'Selected' : 'Select'}
-                  >
-                    <span className="pokemon-ball-btn__inner" />
-                  </button>
-                </div>
-                <img src={p.image} alt="" aria-hidden />
-                <span>{p.displayName ?? p.name}</span>
-                <div className="pokemon-type-row">
-                  {(p.types ?? []).map((typeName) => (
-                    <span
-                      key={`${p.id}-${typeName}`}
-                      className="pokemon-type-chip"
-                      data-type={typeName}
-                    >
-                      {localizeType(typeName)}
+            {pagePokemon.length === 0 ? (
+              <p className="detail-panel__status">{t('pokedex.noPokemonFound')}</p>
+            ) : (
+              pagePokemon.map((p) => (
+                (() => {
+                  const ownedCardsCount = Number(ownedCardCountsByPokemon[p.id] ?? 0)
+                  return (
+                <div
+                  key={`${p.name}-${p.id}`}
+                  className="pokemon-tile"
+                  data-type={p.types?.[0] ?? 'normal'}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onOpenPokemonDetails?.(p.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onOpenPokemonDetails?.(p.id)
+                    }
+                  }}
+                >
+                  <div className="pokemon-tile__top">
+                    <span className="pokemon-id-badge">
+                      <span className="pokemon-id-badge__marker">{ownedCardsCount > 2 ? ownedCardsCount : '🃏'}</span>
+                      #{String(p.id).padStart(4, '0')}
                     </span>
-                  ))}
+                    <div className="pokemon-tile__actions">
+                      <button
+                        type="button"
+                        className="pokemon-card-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onOpenPokemonCards?.(p.id)
+                        }}
+                        aria-label={t('pokedex.viewCardsAria', { name: p.displayName ?? p.name })}
+                        title={t('pokedex.viewCardsTitle')}
+                      >
+                        <span aria-hidden="true">Cartes</span>
+                        {ownedCardsCount > 2 ? <span className="pokemon-card-btn__count">{ownedCardsCount}</span> : null}
+                      </button>
+                      <button
+                        type="button"
+                        className={`pokemon-ball-btn${selectedPokemonIds.has(p.id) ? ' pokemon-ball-btn--active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleSelectedPokemon(p.id)
+                        }}
+                        aria-label={`${selectedPokemonIds.has(p.id) ? 'Deselect' : 'Select'} ${p.displayName ?? p.name}`}
+                        title={selectedPokemonIds.has(p.id) ? 'Selected' : 'Select'}
+                      >
+                        <span className="pokemon-ball-btn__inner" />
+                      </button>
+                    </div>
+                  </div>
+                  <img src={p.image} alt="" aria-hidden />
+                  <span>{p.displayName ?? p.name}</span>
+                  <div className="pokemon-type-row">
+                    {(p.types ?? []).map((typeName) => (
+                      <span
+                        key={`${p.id}-${typeName}`}
+                        className="pokemon-type-chip"
+                        data-type={typeName}
+                      >
+                        {localizeType(typeName)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+                  )
+                })()
+              ))
+            )}
           </div>
           {totalPages > 1 && (
             <div className="pokedex-pagination">
